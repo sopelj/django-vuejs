@@ -30,7 +30,8 @@ from django_vuejs.forms import VueFormMixin
 from .models import Example  
 
 class ExampleForm(VueFormMixin, forms.ModelForm):
-    model = Example
+    class Meta:
+        model = Example
 ```
 
 If you wish to change the layout of your form you can override the form `template_name` and create your own
@@ -42,7 +43,9 @@ from .models import Example
 
 class ExampleForm(VueFormMixin, forms.ModelForm):
     template_name = 'myapp/example_form.html'
-    model = Example
+    
+    class Meta:
+        model = Example
 ```
 
 This will create a form that binds the form fields to a prop called `form` and expects form errors to be in a prop called `errors`
@@ -57,14 +60,11 @@ from django_vuejs.widgets import VueComponentWidget, VueSelectWidget
 from .models import Example 
 
 class ExampleForm(VueFormMixin, forms.ModelForm):
-    model = Example
-    
     class Meta:
+        model = Example
         widgets = {
             'phone': VueComponentWidget('phone-input'),
             'birth_date': VueComponentWidget('date-input'),
             'favourite_colour': VueSelectWidget('v-select'),
         }
 ```
-
-### Api view
