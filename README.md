@@ -68,3 +68,30 @@ class ExampleForm(VueFormMixin, forms.ModelForm):
             'favourite_colour': VueSelectWidget('v-select'),
         }
 ```
+
+### Api Views
+
+To use the Api Views, simply create a `ModelViewSet` with your model that extends `VueFormAPIViewSet`
+
+```python
+from django_vuejs.views import VueFormAPIViewSet
+from .models import Example
+from .serializers import ExampleSerializer
+
+class ExampleAPIViewSet(VueFormAPIViewSet):
+    queryset = Example.objects.all()
+    serializer_class = ExampleSerializer
+```
+
+Then include the views in your URLs.
+
+```python
+from rest_framework.routers import DefaultRouter
+from . import views
+
+# With routers
+router = DefaultRouter()
+router.register(r'snippets', views.ExampleAPIViewSet)
+
+# Or manually
+```

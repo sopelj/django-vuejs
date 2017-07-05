@@ -1,16 +1,17 @@
 from typing import Optional
 
 from django.db.models import Model
-from rest_framework import generics, mixins
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import list_route
 
 from .forms import VueFormMixin
 
 
-class VueFormAPIView(mixins.CreateModelMixin, generics.RetrieveUpdateAPIView):
+class VueFormAPIViewSet(ModelViewSet):
     """
-    API View to allow fething instance as well as creation and update of model instance via a form
+    API View to allow fetching instance as well as creation and update of model instance via a form
     """
     form_class: type(VueFormMixin) = None
 
@@ -23,6 +24,7 @@ class VueFormAPIView(mixins.CreateModelMixin, generics.RetrieveUpdateAPIView):
             return self.form_class(self.request.data, **form_kwargs)
         return self.form_class(**form_kwargs)
 
+    @list_route(methods=['get'], url_path='form-component')
     def retrieve_form_component(self) -> Response:
         """
         Fetch form as a dynamic component that can be bound to <component>
