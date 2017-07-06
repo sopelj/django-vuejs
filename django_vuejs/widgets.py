@@ -30,7 +30,7 @@ class VueComponentWidget(Widget):
         return mark_safe(field)
 
 
-class VueSelectWidget(Select, VueComponentWidget):
+class VueSelectWidget(VueComponentWidget, Select):
     default_component_name = 'v-select'
     choice_id_key = 'value'
     choice_label_key = 'label'
