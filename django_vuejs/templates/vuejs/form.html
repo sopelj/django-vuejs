@@ -1,23 +1,23 @@
 {% load vuejs_tags %}{% spaceless %}
+<div>
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
 
-{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-
-<div v-if="{{ form.errors_prop_name }}.non_field_errors" class="non-field-errors">
-    <ul class="errorlist">
-        <li v-for="error in {{ form.errors_prop_name }}.non_field_errors" v-html="error"></li>
-    </ul>
-</div>
-
-{% for field in form.visible_fields %}
-    <div>
-        <label for="{{ field.id_for_label }}">
-            {{ field.label }}
-        </label>
-        {{ field }}
-        <ul class="errorlist" v-if="{{ form.errors_prop_name }}.{{ field.html_name }}">
-            <li v-for="error in {{ form.errors_prop_name }}.{{ field.html_name }}" v-html="error"></li>
+    <div v-if="{{ form.errors_prop_name }}.non_field_errors" class="non-field-errors">
+        <ul class="errorlist">
+            <li v-for="error in {{ form.errors_prop_name }}.non_field_errors" v-html="error"></li>
         </ul>
     </div>
-{% endfor %}
 
+    {% for field in form.visible_fields %}
+        <div>
+            <label for="{{ field.id_for_label }}">
+                {{ field.label }}
+            </label>
+            {{ field }}
+            <ul class="errorlist" v-if="{{ form.errors_prop_name }}.{{ field.html_name }}">
+                <li v-for="error in {{ form.errors_prop_name }}.{{ field.html_name }}" v-html="error"></li>
+            </ul>
+        </div>
+    {% endfor %}
+</div>
 {% endspaceless %}
