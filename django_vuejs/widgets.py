@@ -30,10 +30,14 @@ class VueComponentWidget(Widget):
         return mark_safe(field)
 
 
-class VueSelectWidget(VueComponentWidget, Select):
+class VueSelectWidget(Select):
     default_component_name = 'v-select'
     choice_id_key = 'value'
     choice_label_key = 'label'
+
+    def __init__(self, component_name: Optional[str], **kwargs):
+        self.component_name = component_name or self.default_component_name
+        super().__init__(**kwargs)
 
     def render(self, name, value, attrs=None, **kwargs):
         if not attrs:
