@@ -15,17 +15,23 @@ class VueFormAPIViewSet(ModelViewSet):
     """
     form_class: type(VueFormMixin) = None
 
+    def get_form_kwargs(self, instance: Optional[Model] = None) -> dict:
+        """
+        Method to allow you to pass custom parameters to form init
+        """
+        return {'instance': instance} if instance else {}
+
     def get_form(self, instance: Optional[Model] = None) -> VueFormMixin:
         """
         Return a form instance. Bound only if posting data
         """
-        form_kwargs = {'instance': instance} if instance else {}
+        form_kwargs = self.get_form_kwargs(instance)
         if self.request.method == 'POST' and self.request.data:
             return self.form_class(self.request.data, **form_kwargs)
         return self.form_class(**form_kwargs)
 
     @list_route(methods=['get'], url_path='form-component')
-    def retrieve_form_component(self) -> Response:
+    def retrieve_form_component(self, request: Request, *args, **kwargs) -> Response:
         """
         Fetch form as a dynamic component that can be bound to <component>
 
@@ -37,7 +43,7 @@ class VueFormAPIViewSet(ModelViewSet):
             <component :is="formComponent" :form="formData" :errors="formErrors"></component>
         </keep-alive>
         """
-        form = self.form_class()
+        form = self.form_class(**self.get_form_kwargs())
         return Response({
             'template': str(form),  # renders form.template_name
             'props': [
