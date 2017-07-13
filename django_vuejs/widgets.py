@@ -36,11 +36,16 @@ class VueSelectWidget(Select):
 
     def __init__(self, component_name: Optional[str]=None, multiple: bool=False, **kwargs):
         self.component_name = component_name or self.default_component_name
-        self.allow_multiple_selected = multiple
         super().__init__(**kwargs)
+        self.multiple = multiple
+
+    def value_from_datadict(self, data, files, name):
+        if self.multiple:
+            return data.getlist(name)
+        return data.get(name)
 
     def value_omitted_from_data(self, data, files, name):
-        if self.allow_multiple_selected:
+        if self.multiple:
             return False
         return super().value_omitted_from_data(data, files, name)
 
@@ -49,7 +54,7 @@ class VueSelectWidget(Select):
         if ':value' not in final_attrs:
             final_attrs[':value'] = value or ''
 
-        if self.allow_multiple_selected:
+        if self.multiple:
             final_attrs['multiple'] = True
 
         final_attrs.update({
