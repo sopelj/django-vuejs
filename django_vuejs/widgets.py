@@ -19,12 +19,11 @@ class VueComponentWidget(Widget):
         super().__init__(**kwargs)
 
     def render(self, name, value, attrs=None, **kwargs):
-        if not attrs:
-            attrs = {}
-        attrs['name'] = name
-        if 'value' not in attrs:
-            attrs['value'] = value or ''
-        field = f'<{self.component_name} {flatatt(attrs)}>'
+        final_attrs = self.build_attrs(attrs)
+        final_attrs['name'] = name
+        if 'value' not in final_attrs:
+            final_attrs['value'] = value or ''
+        field = f'<{self.component_name} {flatatt(final_attrs)}>'
         if self.component_name != 'input':
             field += f'</{self.component_name}>'
         return mark_safe(field)
@@ -46,18 +45,21 @@ class VueSelectWidget(Select):
         return super().value_omitted_from_data(data, files, name)
 
     def render(self, name, value, attrs=None, **kwargs):
-        final_attrs = self.build_attrs(attrs, {'name': name})
+        final_attrs = self.build_attrs(attrs)
         if ':value' not in final_attrs:
             final_attrs[':value'] = value or ''
 
         if self.allow_multiple_selected:
             final_attrs['multiple'] = True
 
-        final_attrs[':options'] = JSONEncoder().encode([
-            {
-                self.choice_id_key: choice,
-                self.choice_label_key: str(label).replace("'", "’")
-            }
-            for choice, label in self.choices
-        ])
+        final_attrs.update({
+            'name': name,
+            ':options': JSONEncoder().encode([
+                {
+                    self.choice_id_key: choice,
+                    self.choice_label_key: str(label).replace("'", "’")
+                }
+                for choice, label in self.choices
+            ])
+        })
         return mark_safe(f'<{self.component_name} {flatatt(final_attrs)}></{self.component_name}>')
