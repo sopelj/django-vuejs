@@ -39,15 +39,14 @@ class VueFormMixin(BaseForm):
             for i, sub_widget in enumerate(widget.widgets):
                 sub_widget.attrs['v-model'] = f'{self.form_prop_name}.{field_name}_{i}'
         else:
-            # TODO setup v-select
-            # if widget.__class__ in [Select, SelectMultiple]:
-            #     if isinstance(widget, SelectMultiple):
-            #         self.fields[field_name].widget.attrs['multiple'] = True
-            #     self.fields[field_name].widget.__class__ = VueSelectWidget
-            #     self.fields[field_name].widget.attrs[':value'] = f'{self.form_prop_name}.{field_name}'
+            if widget.__class__ in [Select, SelectMultiple]:
+                if isinstance(widget, SelectMultiple):
+                    self.fields[field_name].widget.allow_multiple_selected = True
+                self.fields[field_name].widget.__class__ = VueSelectWidget
+                self.fields[field_name].widget.attrs[':value'] = f'{self.form_prop_name}.{field_name}'
 
             self.fields[field_name].widget.attrs.update({
-                'v-model': f'form.{field_name}',
+                'v-model': f'{self.form_prop_name}.{field_name}',
             })
 
     def get_serialized_form_data(self) -> Dict[str, Any]:

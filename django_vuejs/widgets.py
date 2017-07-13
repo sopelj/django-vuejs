@@ -46,23 +46,18 @@ class VueSelectWidget(Select):
         return super().value_omitted_from_data(data, files, name)
 
     def render(self, name, value, attrs=None, **kwargs):
-        if not attrs:
-            attrs = {}
-
-        if 'value' not in attrs:
-            attrs[':value'] = value
+        final_attrs = self.build_attrs(attrs, {'name': name})
+        if ':value' not in final_attrs:
+            final_attrs[':value'] = value or ''
 
         if self.allow_multiple_selected:
-            attrs['multiple'] = True
+            final_attrs['multiple'] = True
 
-        attrs.update({
-            'name': name,
-            ':options': JSONEncoder().encode([
-                {
-                    self.choice_id_key: choice,
-                    self.choice_label_key: str(label).replace("'", "’")
-                }
-                for choice, label in self.choices
-            ]),
-        })
-        return mark_safe(f'<{self.component_name} {flatatt(attrs)}></{self.component_name}>')
+        final_attrs[':options'] = JSONEncoder().encode([
+            {
+                self.choice_id_key: choice,
+                self.choice_label_key: str(label).replace("'", "’")
+            }
+            for choice, label in self.choices
+        ])
+        return mark_safe(f'<{self.component_name} {flatatt(final_attrs)}></{self.component_name}>')
