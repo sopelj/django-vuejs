@@ -51,8 +51,10 @@ class VueSelectWidget(Select):
 
     def render(self, name, value, attrs=None, **kwargs):
         final_attrs = self.build_attrs(attrs)
-        if ':value' not in final_attrs:
-            final_attrs[':value'] = value or ''
+        value_attr = ':value' if self.multiple else 'value'
+        default_value = '[]' if self.multiple else ''
+        if value_attr not in final_attrs:
+            final_attrs[value_attr] = value or default_value
 
         if self.multiple:
             final_attrs['multiple'] = True
