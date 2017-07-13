@@ -35,13 +35,26 @@ class VueSelectWidget(Select):
     choice_id_key = 'value'
     choice_label_key = 'label'
 
-    def __init__(self, component_name: Optional[str], **kwargs):
+    def __init__(self, component_name: Optional[str], multiple=False, **kwargs):
         self.component_name = component_name or self.default_component_name
+        self.allow_multiple_selected = multiple
         super().__init__(**kwargs)
+
+    def value_omitted_from_data(self, data, files, name):
+        if self.allow_multiple_selected:
+            return False
+        return super().value_omitted_from_data(data, files, name)
 
     def render(self, name, value, attrs=None, **kwargs):
         if not attrs:
             attrs = {}
+
+        if 'value' not in attrs:
+            attrs[':value'] = value
+
+        if self.allow_multiple_selected:
+            attrs['multiple'] = True
+
         attrs.update({
             'name': name,
             ':options': JSONEncoder().encode([
@@ -52,4 +65,4 @@ class VueSelectWidget(Select):
                 for choice, label in self.choices
             ]),
         })
-        return super().render(name, value, attrs, **kwargs)
+        return mark_safe(f'<{self.component_name} {flatatt(attrs)}></{self.component_name}>')
