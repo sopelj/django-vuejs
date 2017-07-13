@@ -50,7 +50,7 @@ class VueSelectWidget(Select):
             attrs = {}
 
         if 'value' not in attrs:
-            attrs[':value'] = value
+            attrs['value'] = value
 
         if self.allow_multiple_selected:
             attrs['multiple'] = True
@@ -59,7 +59,7 @@ class VueSelectWidget(Select):
             'name': name,
             ':options': JSONEncoder().encode([
                 {
-                    self.choice_id_key: str(choice),
+                    self.choice_id_key: choice,
                     self.choice_label_key: str(label).replace("'", "’")
                 }
                 for choice, label in self.choices
