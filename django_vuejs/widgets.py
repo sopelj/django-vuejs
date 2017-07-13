@@ -33,6 +33,7 @@ class VueSelectWidget(Select):
     default_component_name = 'v-select'
     choice_id_key = 'value'
     choice_label_key = 'label'
+    option_prop_name = 'options'
 
     def __init__(self, component_name: Optional[str]=None, multiple: bool=False, **kwargs):
         self.component_name = component_name or self.default_component_name
@@ -61,7 +62,7 @@ class VueSelectWidget(Select):
 
         final_attrs.update({
             'name': name,
-            ':options': JSONEncoder().encode([
+            f':{self.option_prop_name}': JSONEncoder().encode([
                 {
                     self.choice_id_key: choice,
                     self.choice_label_key: str(label).replace("'", "’")
