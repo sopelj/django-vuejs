@@ -50,7 +50,7 @@ class VueSelectWidget(Select):
             attrs = {}
 
         if 'value' not in attrs:
-            attrs['value'] = value
+            attrs[':value'] = value
 
         if self.allow_multiple_selected:
             attrs['multiple'] = True
