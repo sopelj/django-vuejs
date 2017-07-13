@@ -35,7 +35,7 @@ class VueSelectWidget(Select):
     choice_id_key = 'value'
     choice_label_key = 'label'
 
-    def __init__(self, component_name: Optional[str], multiple=False, **kwargs):
+    def __init__(self, component_name: Optional[str]=None, multiple: bool=False, **kwargs):
         self.component_name = component_name or self.default_component_name
         self.allow_multiple_selected = multiple
         super().__init__(**kwargs)
