@@ -12,10 +12,11 @@ class VueComponentWidget(Widget):
 
     ex. widgets = {'phone': VueComponentWidget('phone-input')}
     """
-    default_component_name = 'input'
+    component_name = 'input'
 
     def __init__(self, component_name: Optional[str], **kwargs):
-        self.component_name = component_name or self.default_component_name
+        if component_name is not None:
+            self.component_name = component_name
         super().__init__(**kwargs)
 
     def render(self, name, value, attrs=None, **kwargs):
@@ -30,15 +31,17 @@ class VueComponentWidget(Widget):
 
 
 class VueSelectWidget(Select):
-    default_component_name = 'v-select'
+    component_name = 'v-select'
     choice_id_key = 'value'
     choice_label_key = 'label'
     option_prop_name = 'options'
+    multiple = False
 
     def __init__(self, component_name: Optional[str]=None, multiple: bool=False, **kwargs):
-        self.component_name = component_name or self.default_component_name
-        super().__init__(**kwargs)
+        if component_name is not None:
+            self.component_name = component_name
         self.multiple = multiple
+        super().__init__(**kwargs)
 
     def value_from_datadict(self, data, files, name):
         if self.multiple:
