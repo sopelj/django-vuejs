@@ -1,6 +1,7 @@
 from typing import Optional, Dict, Union, Any
 
 from django.db.models import Model
+from django.forms import ModelForm
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -51,23 +52,23 @@ class VueFormAPIViewSet(ModelViewSet):
         instance = self.get_object()
         response_data = self.get_form_response(self.get_form(instance))
         if request.GET.get('include_component') == 'true':
-            response_data['form_component'] = {
-                'template': str(self.get_form_class()),
-                'props': ['form', 'errors'],
-            }
+            response_data['form_component'] = self.get_form_component()
         return Response(response_data)
 
     def get_form_response(self, form: VueFormMixin) -> Dict[str, dict]:
         """
         Extract errors and form_data from form or return defaults
         """
-        if form.is_bound:
-            form.is_valid()
-            errors = form.errors
+        errors = {}
+        if form.is_bound or (isinstance(form, ModelForm) and form.instance.pk):
             data = form.get_serialized_form_data()
         else:
             data = self.get_initial_form_data()
-            errors = {}
+
+        if form.is_bound:
+            form.is_valid()
+            errors = form.errors
+
         return {'form_data': data, 'errors': errors}
 
     def get_form_component(self) -> Dict[str, Any]:
