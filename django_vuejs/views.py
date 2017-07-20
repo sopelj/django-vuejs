@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Union, Any
 
 from django.db.models import Model
 from rest_framework.request import Request
@@ -21,14 +21,64 @@ class VueFormAPIViewSet(ModelViewSet):
         """
         return {'instance': instance} if instance else {}
 
+    def get_initial_form_data(self) -> dict:
+        """
+        Return initial form values if no instance is bound to form
+        """
+        return {}
+
     def get_form(self, instance: Optional[Model] = None) -> VueFormMixin:
         """
         Return a form instance. Bound only if posting data
         """
         form_kwargs = self.get_form_kwargs(instance)
+        form_class = self.get_form_class()
         if self.request.method == 'POST' and self.request.data:
-            return self.form_class(self.request.data, **form_kwargs)
-        return self.form_class(**form_kwargs)
+            return form_class(self.request.data, **form_kwargs)
+        return form_class(**form_kwargs)
+
+    def get_form_class(self) -> type(VueFormMixin):
+        """
+        Allow one to override form_class
+        """
+        return self.form_class
+
+    def retrieve(self, request, *args, **kwargs) -> Response:
+        """
+        Fetch object data as represented in the form
+        Passing the option `include_component=true` via get will also return the component with with the form template
+        """
+        instance = self.get_object()
+        response_data = self.get_form_response(self.get_form(instance))
+        if request.GET.get('include_component') == 'true':
+            response_data['form_component'] = {
+                'template': str(self.get_form_class()),
+                'props': ['form', 'errors'],
+            }
+        return Response(response_data)
+
+    def get_form_response(self, form: VueFormMixin) -> Dict[str, dict]:
+        """
+        Extract errors and form_data from form or return defaults
+        """
+        if form.is_bound:
+            form.is_valid()
+            errors = form.errors
+            data = form.get_serialized_form_data()
+        else:
+            data = self.get_initial_form_data()
+            errors = {}
+        return {'form_data': data, 'errors': errors}
+
+    def get_form_component(self) -> Dict[str, Any]:
+        """
+        Get form template and props
+        """
+        form = self.get_form_class()(**self.get_form_kwargs())
+        return {
+            'template': str(form),  # renders form.template_name
+            'props': [form.form_prop_name, form.errors_prop_name],
+        }
 
     @list_route(methods=['get'], url_path='form-component')
     def retrieve_form_component(self, request: Request, *args, **kwargs) -> Response:
@@ -43,14 +93,28 @@ class VueFormAPIViewSet(ModelViewSet):
             <component :is="formComponent" :form="formData" :errors="formErrors"></component>
         </keep-alive>
         """
-        form = self.form_class(**self.get_form_kwargs())
-        return Response({
-            'template': str(form),  # renders form.template_name
-            'props': [
-                form.form_prop_name,
-                form.errors_prop_name,
-            ],
-        })
+        return Response(self.get_form_component())
+
+    def save_form(self, form: VueFormMixin):
+        """
+        Hook to change instance pre/post save
+        """
+        return form.save()
+
+    def form_valid(self, form: VueFormMixin):
+        """
+        Hook for valid form response
+        """
+        creating = not form.instance.pk
+        self.save_form(form)
+        response_data = self.get_form_response(form)
+        return Response(response_data, status=201 if creating else 200)
+
+    def form_invalid(self, form: VueFormMixin):
+        """
+        Hook for invalid form response
+        """
+        return Response(self.get_form_response(form), status=400)
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
@@ -58,10 +122,8 @@ class VueFormAPIViewSet(ModelViewSet):
         """
         form = self.get_form()
         if form.is_valid():
-            instance = form.save()
-            serializer = self.get_serializer(instance)
-            return Response(serializer.data, status=201)
-        return Response({'errors': form.errors}, status=400)
+            return self.form_valid(form)
+        return self.form_invalid(form)
 
     def update(self, request: Request, *args, **kwargs) -> Response:
         """
@@ -69,7 +131,5 @@ class VueFormAPIViewSet(ModelViewSet):
         """
         form = self.get_form(self.get_object())
         if form.is_valid():
-            instance = form.save()
-            serializer = self.get_serializer(instance)
-            return Response(serializer.data, status=200)
-        return Response({'errors': form.errors}, status=400)
+            return self.form_valid(form)
+        return self.form_invalid(form)
