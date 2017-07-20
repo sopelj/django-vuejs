@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict
 
 from django.db.models import Model
-from django.forms import BaseForm, MultiWidget, Select, SelectMultiple
+from django.forms import BaseForm, MultiWidget, Select, SelectMultiple, ModelForm
 from django.template.loader import render_to_string
 from rest_framework.utils.encoders import JSONEncoder
 
@@ -53,15 +53,16 @@ class VueFormMixin(BaseForm):
         """
         Get cleaned data as a dictionary that can be safely converted to JSON
         """
-        if not self.is_bound:
-            return {}
+        if self.is_bound:
+            if not hasattr(self, 'cleaned_data'):
+                self.is_valid()
+            data = self.cleaned_data
+        else:
+            data = self.initial
 
-        data = {}
-        if not hasattr(self, 'cleaned_data'):
-            self.is_valid()
-
+        serialized_data = {}
         for field_name, field in self.fields.items():
-            value = self.cleaned_data.get(field_name)
+            value = data.get(field_name)
             if not value:
                 continue
 
@@ -69,12 +70,12 @@ class VueFormMixin(BaseForm):
                 try:
                     values = json.loads(value)
                     for i, _ in enumerate(field.widget.widgets):
-                        data[f'{field_name}_{i}'] = values[i]
+                        serialized_data[f'{field_name}_{i}'] = values[i]
                 except (json.JSONDecodeError, KeyError):
                     pass
             else:
-                data[field_name] = value.pk if isinstance(value, Model) else value
-        return json.loads(JSONEncoder().encode(data))
+                serialized_data[field_name] = value.pk if isinstance(value, Model) else value
+        return json.loads(JSONEncoder().encode(serialized_data))
 
     def __str__(self) -> str:
         """
