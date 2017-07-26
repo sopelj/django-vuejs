@@ -50,26 +50,27 @@ class VueFormAPIViewSet(ModelViewSet):
         Passing the option `include_component=true` via get will also return the component with with the form template
         """
         instance = self.get_object()
-        response_data = self.get_form_response(self.get_form(instance))
-        if request.GET.get('include_component') == 'true':
-            response_data['form_component'] = self.get_form_component()
-        return Response(response_data)
+        include_component = request.GET.get('include_component') == 'true'
+        return Response(self.get_form_response(self.get_form(instance), include_component))
 
-    def get_form_response(self, form: VueFormMixin) -> Dict[str, dict]:
+    def get_form_response(self, form: Optional[VueFormMixin] = None, include_component: bool = False) -> dict:
         """
         Extract errors and form_data from form or return defaults
         """
         errors = {}
-        if form.is_bound or (isinstance(form, ModelForm) and form.instance.pk):
+        if form is not None and (form.is_bound or (isinstance(form, ModelForm) and form.instance.pk)):
             data = form.get_serialized_form_data()
         else:
             data = self.get_initial_form_data()
 
-        if form.is_bound:
+        if form is not None and form.is_bound:
             form.is_valid()
             errors = form.errors
 
-        return {'form_data': data, 'errors': errors}
+        response = {'form_data': data, 'errors': errors}
+        if include_component is True:
+            response['form_component'] = self.get_form_component()
+        return response
 
     def get_form_component(self) -> Dict[str, Any]:
         """
@@ -94,7 +95,7 @@ class VueFormAPIViewSet(ModelViewSet):
             <component :is="formComponent" :form="formData" :errors="formErrors"></component>
         </keep-alive>
         """
-        return Response(self.get_form_component())
+        return Response(self.get_form_response(include_component=True))
 
     def save_form(self, form: VueFormMixin):
         """
