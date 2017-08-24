@@ -44,9 +44,13 @@ class VueSelectWidget(Select):
         super().__init__(**kwargs)
 
     def value_from_datadict(self, data, files, name):
+        getter = data.get
         if self.multiple:
-            return data.getlist(name)
-        return data.get(name)
+            try:
+                getter = data.getlist
+            except AttributeError:
+                pass
+        return getter(name)
 
     def value_omitted_from_data(self, data, files, name):
         if self.multiple:
