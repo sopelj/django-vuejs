@@ -68,9 +68,10 @@ class VueFormMixin(BaseForm):
 
             if isinstance(field.widget, MultiWidget):
                 try:
-                    values = json.loads(value)
+                    if isinstance(value, str):
+                        value = json.loads(value)
                     for i, _ in enumerate(field.widget.widgets):
-                        serialized_data[f'{field_name}_{i}'] = values[i]
+                        serialized_data[f'{field_name}_{i}'] = value[i]
                 except (json.JSONDecodeError, KeyError):
                     pass
             else:
